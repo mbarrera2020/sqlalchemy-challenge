@@ -50,11 +50,16 @@ def home():
         f"Welcome to the Climate App Home page! <br/>"
         f"<br/>"
         f"The following routes are available: <br/>"
-        f"/api/v1.0/precipitation <br/>"
-        f"/api/v1.0/stations <br/>"
-        f"/api/v1.0/tobs <br/>"
-        f"/api/v1.0/<start> <br>"
-        f"/api/v1.0/<start>/<end> <br/>"
+        f"<br/>"
+        f"  /api/v1.0/precipitation <br/>"
+        f"<br/>"
+        f"  /api/v1.0/stations <br/>"
+        f"<br/>"
+        f"  /api/v1.0/tobs <br/>"
+        f"<br/>"
+        f"  /api/v1.0/start <br>"
+        f"<br/>"
+        f"  /api/v1.0/start_end <br/>"
         )
 
 ##########################################################################################
@@ -117,7 +122,37 @@ def stations():
 # Query the dates and temperature observations of the most active station for the last year of data.
 # Return a JSON list of temperature observations (TOBS) for the previous year.
 ####################################################################################################
+@app.route("/api/v1.0/tobs")
+def tobs():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    print("Server received request for 'tobs' page...")
+    """Return tobs data as json"""
+    results = session.query(Station.station, Station.name, Station.latitude, 
+                Station.longitude, Station.elevation).all()
 
+    # Query all stations
+    #statement1 = " \
+    #    SELECT s.station, COUNT(date) \
+    #    FROM station s \
+    #    INNER JOIN measurement m \
+    #    ON s.station = m.station \
+    #    GROUP BY s.station \
+    #    ORDER BY COUNT(date) DESC;"
+
+    #results = session.query(statement1).all()
+    
+    session.close()
+
+# Create a dictionary from the row data and append to a list of all_tobsforstation
+    #all_tobsforstation = []
+    #for station, count in results:
+    #    tobs_dict={}
+    #    tobs_dict["station"] = station
+    #    tobs_dict["count"] = count
+    #    all_tobsforstation.append(tobs_dict)
+
+    #return jsonify(all_tobsforstation)
 
 ####################################################################################################
 # Define what to do when a user hits the /api/v1.0/<start> route
@@ -126,7 +161,28 @@ def stations():
 # When given the start only, calculate TMIN, TAVG, and TMAX for all dates greater than and equal 
 #   to the start date.
 ####################################################################################################
+@app.route("/api/v1.0/<start>")
+def start():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    print("Server received request for '<start>' page...")
+    """Return TMIN, TAVG, and TMAX data as json"""
+    results = session.query(Station.station, Station.name, Station.latitude, 
+                Station.longitude, Station.elevation).all()
+    
+    session.close()
+    
+# Create a dictionary from the row data and append to a list of all_start
+    all_start = []
+    for TMIN, TAVG, TMAX in results:
+        start_dict={}
+        start_dict["date"] = date
+        tobs_dict["tmin"] = tmin
+        tobs_dict["tavg"] = tavg
+        tobs_dict["tmax"] = tmax
+        all_start.append(start_dict)
 
+    return jsonify(all_start)
 
 ####################################################################################################
 # Define what to do when a user hits the /api/v1.0/<start>/<end> route
