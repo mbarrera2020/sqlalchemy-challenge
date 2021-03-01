@@ -131,6 +131,7 @@ def tobs():
     """Return tobs data as json"""
     results = session.query(Measurement.date, Measurement.tobs).\
                 filter(Measurement.station == 'USC00519281').all()
+                    
     session.close()
 
 # Create a dictionary from the row data and append to a list of all_tobs for station
@@ -158,14 +159,23 @@ def start():
     """Return TMIN, TAVG, and TMAX data as json"""
     
     #results = session.query(s_date, tmin, tmax, tavg).all()
-    results = session.query(Station.station, Station.name, Station.latitude, 
-                Station.longitude, Station.elevation).all()
+    results = session.query (\
+                        func.max(Measurement.tobs).label('Tmax'),\
+                        func.min(Measurement.tobs).label('Tmin'),\
+                        func.avg(Measurement.tobs).label('Tavg')).\
+                filter(Measurement.station == 'USC00519281',\
+                Measurement.date == '2016-08-23').all()
+
+                # Measurement.date.between ('2016-08-23', '2017-08-23')).all()
 
     session.close()
-    
+
 # Create a dictionary from the row data and append to a list of all_start
     # for testing
     s_date = '2016-08-23'
+    #tmax = results.Tmax
+    #tmin = results.Tmin
+    #tavg = results.Tavg
     tmin = 58.0
     tmax = 87.0
     tavg = 74.59    
@@ -194,22 +204,32 @@ def start_end():
     session = Session(engine)
     print("Server received request for '<start><end>' page...")
     """Return TMIN, TAVG, and TMAX data as json"""
+     
+    #results = session.query(s_date, e_date, tmin, tmax, tavg).all()
+    results = session.query (\
+                        func.max(Measurement.tobs).label('Tmax'),\
+                        func.min(Measurement.tobs).label('Tmin'),\
+                        func.avg(Measurement.tobs).label('Tavg')).\
+                filter(Measurement.station == 'USC00519281',\
+                Measurement.date.between ('2016-08-23', '2017-08-23')).all()
+
+                # Measurement.date.between ('2016-08-23', '2017-08-23')).all()
+    
+    session.close()
+
     # for testing
     s_date = '2016-08-23'
     e_date = '2017-08-23'
+    #tmax = results.Tmax
+    #tmin = results.Tmin
+    #tavg = results.Tavg
     tmin = 58.0
     tmax = 87.0
-    tavg = 74.59    
-
-    #results = session.query(s_date, e_date, tmin, tmax, tavg).all()
-    results = session.query(Station.station, Station.name, Station.latitude, 
-                Station.longitude, Station.elevation).all()
-    
-    session.close()
+    tavg = 74.59 
     
 # Create a dictionary from the row data and append to a list of all_startend
     all_startend = []
-    for x in results:
+    for date in results:
         startend_dict={}
         startend_dict["sdate"] = s_date
         startend_dict["edate"] = e_date
