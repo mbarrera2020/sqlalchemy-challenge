@@ -1,7 +1,7 @@
 #################################################
 # ClimateApp.py 
 # Author: Maria Barrera
-# Date: 02/27/2021
+# Date: 02/28/2021
 #################################################
 
 # 1. import Flask & jsonify
@@ -120,6 +120,7 @@ def stations():
 ####################################################################################################
 # Define what to do when a user hits the /api/v1.0/tobs route
 # Query the dates and temperature observations of the most active station for the last year of data.
+# ** where Measurement.station = 'USC00519281'
 # Return a JSON list of temperature observations (TOBS) for the previous year.
 ####################################################################################################
 @app.route("/api/v1.0/tobs")
@@ -128,31 +129,19 @@ def tobs():
     session = Session(engine)
     print("Server received request for 'tobs' page...")
     """Return tobs data as json"""
-    results = session.query(Station.station, Station.name, Station.latitude, 
-                Station.longitude, Station.elevation).all()
-
-    # Query all stations
-    #statement1 = " \
-    #    SELECT s.station, COUNT(date) \
-    #    FROM station s \
-    #    INNER JOIN measurement m \
-    #    ON s.station = m.station \
-    #    GROUP BY s.station \
-    #    ORDER BY COUNT(date) DESC;"
-
-    #results = session.query(statement1).all()
-    
+    results = session.query(Measurement.date, Measurement.tobs).\
+                filter(Measurement.station == 'USC00519281').all()
     session.close()
 
-# Create a dictionary from the row data and append to a list of all_tobsforstation
-    #all_tobsforstation = []
-    #for station, count in results:
-    #    tobs_dict={}
-    #    tobs_dict["station"] = station
-    #    tobs_dict["count"] = count
-    #    all_tobsforstation.append(tobs_dict)
+# Create a dictionary from the row data and append to a list of all_tobs for station
+    all_tobs = []
+    for date, tobs in results:
+        tobs_dict={}
+        tobs_dict["date"] = date
+        tobs_dict["prcp"] = tobs
+        all_tobs.append(tobs_dict)
 
-    #return jsonify(all_tobsforstation)
+    return jsonify(all_tobs)
 
 ####################################################################################################
 # Define what to do when a user hits the /api/v1.0/<start> route
@@ -161,25 +150,33 @@ def tobs():
 # When given the start only, calculate TMIN, TAVG, and TMAX for all dates greater than and equal 
 #   to the start date.
 ####################################################################################################
-@app.route("/api/v1.0/<start>")
+@app.route("/api/v1.0/start")
 def start():
     # Create our session (link) from Python to the DB
     session = Session(engine)
     print("Server received request for '<start>' page...")
     """Return TMIN, TAVG, and TMAX data as json"""
+    
+    #results = session.query(s_date, tmin, tmax, tavg).all()
     results = session.query(Station.station, Station.name, Station.latitude, 
                 Station.longitude, Station.elevation).all()
-    
+
     session.close()
     
 # Create a dictionary from the row data and append to a list of all_start
+    # for testing
+    s_date = '2016-08-23'
+    tmin = 58.0
+    tmax = 87.0
+    tavg = 74.59    
+
     all_start = []
-    for TMIN, TAVG, TMAX in results:
+    for x in results:
         start_dict={}
-        start_dict["date"] = date
-        tobs_dict["tmin"] = tmin
-        tobs_dict["tavg"] = tavg
-        tobs_dict["tmax"] = tmax
+        start_dict["sdate"] = s_date
+        start_dict["tmin"] = tmin
+        start_dict["tavg"] = tavg
+        start_dict["tmax"] = tmax
         all_start.append(start_dict)
 
     return jsonify(all_start)
@@ -191,6 +188,37 @@ def start():
 # When given the start and the end date, calculate the TMIN, TAVG, and TMAX for dates between 
 # the start and end date inclusive.
 ####################################################################################################
+@app.route("/api/v1.0/start_end")
+def start_end():
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
+    print("Server received request for '<start><end>' page...")
+    """Return TMIN, TAVG, and TMAX data as json"""
+    # for testing
+    s_date = '2016-08-23'
+    e_date = '2017-08-23'
+    tmin = 58.0
+    tmax = 87.0
+    tavg = 74.59    
+
+    #results = session.query(s_date, e_date, tmin, tmax, tavg).all()
+    results = session.query(Station.station, Station.name, Station.latitude, 
+                Station.longitude, Station.elevation).all()
+    
+    session.close()
+    
+# Create a dictionary from the row data and append to a list of all_startend
+    all_startend = []
+    for x in results:
+        startend_dict={}
+        startend_dict["sdate"] = s_date
+        startend_dict["edate"] = e_date
+        startend_dict["tmin"] = tmin
+        startend_dict["tavg"] = tavg
+        startend_dict["tmax"] = tmax
+        all_startend.append(startend_dict)
+
+    return jsonify(all_startend)
 
 
 if __name__ == "__main__":
